@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Callable
 
-from agent_reach.reliability.judge import judge_result
 from agent_reach.reliability.scorer import BackendStats
 
 
@@ -20,6 +21,10 @@ class AdaptiveRouter:
     Executes candidate backends, evaluates their actual output
     using the semantic judge, and falls back when the result
     is not useful enough.
+
+    Backend ordering is **deterministic**: when reliability scores are equal
+    (e.g. fresh stats at 0), backends are tried in dict insertion order.
+    Callers control priority by inserting Backend A before Backend B.
     """
 
     def __init__(
@@ -27,6 +32,7 @@ class AdaptiveRouter:
         backends: dict[str, Callable[[str], str]],
         stats: dict[str, BackendStats] | None = None,
         quality_threshold: float = 0.65,
+        judge: Callable[[str, str], dict] | None = None,
     ):
         self.backends = backends
         self.stats = stats or {
@@ -34,6 +40,15 @@ class AdaptiveRouter:
             for name in backends
         }
         self.quality_threshold = quality_threshold
+        self._judge = judge
+
+    def _get_judge(self) -> Callable[[str, str], dict]:
+        """Return the judge callable, lazily importing the default."""
+        if self._judge is not None:
+            return self._judge
+        from agent_reach.reliability.judge import judge_result
+
+        return judge_result
 
     def _quality_score(self, evaluation: dict) -> float:
         """
@@ -57,13 +72,21 @@ class AdaptiveRouter:
         Try backends until a sufficiently good result is found.
         """
 
+        # Deterministic order: when reliability scores tie (e.g. all 0),
+        # Python's sorted() is stable, so dict insertion order is preserved.
+        insertion_order = list(self.stats.keys())
         ranked = sorted(
             self.stats.values(),
-            key=lambda backend: backend.reliability_score,
+            key=lambda b: (
+                b.reliability_score,
+                -insertion_order.index(b.backend),
+            ),
             reverse=True,
         )
 
-        attempts = []
+        attempts: list[BackendResult] = []
+
+        judge_fn = self._get_judge()
 
         for backend_stat in ranked:
             backend_name = backend_stat.backend
@@ -82,7 +105,9 @@ class AdaptiveRouter:
                     print("   ❌ Empty result")
                     continue
 
-                evaluation = judge_result(query, result)
+                print(f"   📄 Received {len(result):,} characters")
+
+                evaluation = judge_fn(query, result)
 
                 score = self._quality_score(evaluation)
 
@@ -122,7 +147,7 @@ class AdaptiveRouter:
 
                     return attempts[-1]
 
-                backend_stat.record_failure()
+                backend_stat.record_failure(quality=score)
 
                 print(f"   ⚠️ REJECTED: {backend_name}")
                 print("   ↳ Falling back to next backend...")
@@ -147,3 +172,45 @@ class AdaptiveRouter:
         print("\n❌ No usable backend result found.")
 
         return None
+
+    def stats_summary(self) -> dict[str, dict]:
+        """
+        Return per-backend statistics as a plain dict for inspection/logging.
+
+        Example return value::
+
+            {
+                "jina-mcp-wiki": {
+                    "successes": 1,
+                    "failures": 0,
+                    "quality_score": 0.82,
+                    "success_rate": 1.0,
+                    "reliability_score": 0.82,
+                },
+                ...
+            }
+        """
+        summary: dict[str, dict] = {}
+        for name, stat in self.stats.items():
+            summary[name] = {
+                "successes": stat.successes,
+                "failures": stat.failures,
+                "quality_score": stat.quality_score,
+                "success_rate": stat.success_rate,
+                "reliability_score": stat.reliability_score,
+            }
+        return summary
+
+    def print_stats(self) -> None:
+        """Pretty-print per-backend statistics."""
+        print("\n" + "=" * 50)
+        print("        BACKEND STATISTICS")
+        print("=" * 50)
+        for name, s in self.stats_summary().items():
+            print(f"\n  📊 {name}")
+            print(f"     Successes:        {s['successes']}")
+            print(f"     Failures:         {s['failures']}")
+            print(f"     Quality score:    {s['quality_score']:.2f}")
+            print(f"     Success rate:     {s['success_rate']:.2f}")
+            print(f"     Reliability:      {s['reliability_score']:.2f}")
+        print()

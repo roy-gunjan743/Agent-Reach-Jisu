@@ -1,7 +1,6 @@
 from agent_reach.reliability.executor import JinaExecutor
 from agent_reach.reliability.judge import judge_result
 
-
 QUERY = "What is MCP and how does it improve AI agent tool usage?"
 
 URL = "https://en.wikipedia.org/wiki/Model_Context_Protocol"

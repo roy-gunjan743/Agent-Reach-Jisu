@@ -29,8 +29,10 @@ class BackendStats:
         self.successes += 1
         self.quality_score = quality
 
-    def record_failure(self) -> None:
+    def record_failure(self, quality: float | None = None) -> None:
         self.failures += 1
+        if quality is not None:
+            self.quality_score = quality
 
 
 def rank_backends(backends: list[BackendStats]) -> list[BackendStats]:

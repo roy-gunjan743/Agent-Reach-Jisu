@@ -19,26 +19,31 @@ def good_backend(query: str) -> str:
     """
 
 
-router = AdaptiveRouter(
-    backends={
-        "bad-backend": bad_backend,
-        "good-backend": good_backend,
-    }
-)
+def main() -> None:
+    router = AdaptiveRouter(
+        backends={
+            "bad-backend": bad_backend,
+            "good-backend": good_backend,
+        }
+    )
 
-query = "What is MCP and how does it improve AI agent tool usage?"
+    query = "What is MCP and how does it improve AI agent tool usage?"
 
-result = router.route(query)
+    result = router.route(query)
 
-print("\n==============================")
-print("       FINAL ROUTER RESULT")
-print("==============================")
+    print("\n==============================")
+    print("       FINAL ROUTER RESULT")
+    print("==============================")
 
-if result:
-    print(f"Backend: {result.backend}")
-    print(f"Score:   {result.score:.2f}")
-    print(f"Decision: {result.evaluation['decision']}")
-    print("\nAnswer:")
-    print(result.result)
-else:
-    print("No useful result found.")
+    if result:
+        print(f"Backend: {result.backend}")
+        print(f"Score:   {result.score:.2f}")
+        print(f"Decision: {result.evaluation['decision']}")
+        print("\nAnswer:")
+        print(result.result)
+    else:
+        print("No useful result found.")
+
+
+if __name__ == "__main__":
+    main()

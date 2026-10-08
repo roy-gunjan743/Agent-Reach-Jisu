@@ -80,3 +80,9 @@ warn_unused_ignores = true
 check_untyped_defs = true
 ignore_missing_imports = true
 exclude = ["^tests/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: requires network and a judge backend (GEMINI_API_KEY or local Ollama)",
+]
