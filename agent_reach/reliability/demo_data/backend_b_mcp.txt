@@ -1,0 +1,481 @@
+Title: Model Context Protocol - Wikipedia
+URL Source: https://en.wikipedia.org/wiki/Model_Context_Protocol
+Markdown Content:
+
+# Model Context Protocol
+
+The **Model Context Protocol** (**MCP**) is an open standard introduced by Anthropic in November 2024 designed to standardize how artificial intelligence (AI) models, agents, and client applications securely communicate with external data sources, enterprise tools, and execution environments.
+
+Before MCP, integrating an AI model or autonomous agent with external capabilities required bespoke API integrations, ad-hoc function calling schemas, and custom middleware for every data repository, database, or API service. MCP solves this interoperability fragmentation by providing a standardized, bidirectional communication protocol akin to the Language Server Protocol (LSP) used in modern IDEs.
+
+## Overview and Architecture
+
+MCP uses a client-server architecture built upon JSON-RPC 2.0 messages exchanged over standard transport mechanisms such as stdio (standard input/output) for local desktop tools and Server-Sent Events (SSE) over HTTP for remote cloud services.
+
+The core architecture comprises three fundamental components:
+- **MCP Hosts**: The client applications or agent runtimes, such as Claude Desktop, IDE extensions, or custom autonomous agent frameworks, that initiate connections, manage user authorization, and maintain conversation context.
+- **MCP Clients**: Protocol endpoints maintained within the host that establish 1:1 connections with servers and coordinate request-response cycles.
+- **MCP Servers**: Lightweight service programs that expose specific capabilities, database queries, web scraping functions, or file system access to clients through standardized primitives.
+
+## Core Primitives
+
+MCP defines three primary structural primitives:
+1. **Tools**: Executable functions that models can invoke to perform external side effects or computational actions, such as executing SQL queries, querying APIs, fetching web pages, or running terminal commands.
+2. **Resources**: Read-only contextual data, documents, log files, or schema metadata that provide grounding information to the model.
+3. **Prompts**: Parameterized prompt templates and interaction patterns that guide LLM behavior for domain-specific tasks.
+
+## Benefits for AI Agents
+
+1. **Interoperability**: A single MCP server implementation works seamlessly across multiple AI clients, tools, and developer platforms without rewriting integration code.
+2. **Security and Isolation**: MCP servers operate in isolated processes with strict credential segregation. AI models interact through capability declarations rather than direct credential access.
+3. **Modularity**: Developers can compose swarms of specialized servers (e.g., GitHub server, Postgres server, Web Reader server) to expand agent abilities dynamically.
+
+### Section 1: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 0: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 1: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 0: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 1: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 0: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 1: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 0: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 2: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 1: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 2: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 1: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 2: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 1: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 2: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 1: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 3: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 2: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 3: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 2: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 3: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 2: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 3: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 2: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 4: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 3: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 4: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 3: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 4: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 3: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 4: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 3: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 5: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 4: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 5: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 4: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 5: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 4: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 5: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 4: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 6: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 5: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 6: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 5: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 6: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 5: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 6: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 5: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 7: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 6: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 7: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 6: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 7: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 6: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 7: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 6: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 8: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 7: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 8: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 7: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 8: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 7: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 8: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 7: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 9: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 8: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 9: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 8: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 9: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 8: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 9: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 8: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 10: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 9: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 10: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 9: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 10: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 9: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 10: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 9: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 11: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 10: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 11: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 10: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 11: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 10: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 11: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 10: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 12: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 11: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 12: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 11: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 12: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 11: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 12: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 11: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 13: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 12: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 13: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 12: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 13: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 12: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 13: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 12: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 14: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 13: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 14: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 13: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 14: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 13: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 14: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 13: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 15: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 14: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 15: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 14: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 15: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 14: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 15: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 14: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 16: JSON-RPC 2.0 Transport Details
+
+The protocol communication layer follows JSON-RPC 2.0. Messages include requests, responses, and unidirectional notifications. Request identifiers ensure asynchronous tracking across concurrent tool executions.
+
+Detailed evaluation notes 15: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 16: Transport Layer Mechanics
+
+Local agents communicate via stdin and stdout pipelines with newline-delimited JSON. Remote servers utilize HTTPS with Server-Sent Events (SSE) for server-to-client streaming and standard POST requests for client-to-server commands.
+
+Detailed evaluation notes 15: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 16: Security Model and Access Control
+
+Hosts maintain full user-in-the-loop permission granting before tools are executed. Sensitive operations require explicit confirmation. Server capability negotiation happens during the initialization handshake.
+
+Detailed evaluation notes 15: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+### Section 16: Ecosystem and Agent Adoption
+
+Since its open-source release, MCP has been adopted across leading developer tools, IDEs, code editors, and agent frameworks including Claude Desktop, Cursor, Continue, Zed, and open-source orchestrators.
+
+Detailed evaluation notes 15: The protocol guarantees deterministic serialization and schema validation using JSON Schema definitions. Performance metrics show roundtrip latencies under 15ms.
+
+## Extended Link Directory
+
+* [Reference link 1: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=1)
+* [Reference link 2: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=2)
+* [Reference link 3: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=3)
+* [Reference link 4: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=4)
+* [Reference link 5: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=5)
+* [Reference link 6: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=6)
+* [Reference link 7: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=7)
+* [Reference link 8: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=8)
+* [Reference link 9: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=9)
+* [Reference link 10: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=10)
+* [Reference link 11: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=11)
+* [Reference link 12: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=12)
+* [Reference link 13: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=13)
+* [Reference link 14: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=14)
+* [Reference link 15: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=15)
+* [Reference link 16: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=16)
+* [Reference link 17: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=17)
+* [Reference link 18: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=18)
+* [Reference link 19: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=19)
+* [Reference link 20: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=20)
+* [Reference link 21: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=21)
+* [Reference link 22: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=22)
+* [Reference link 23: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=23)
+* [Reference link 24: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=24)
+* [Reference link 25: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=25)
+* [Reference link 26: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=26)
+* [Reference link 27: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=27)
+* [Reference link 28: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=28)
+* [Reference link 29: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=29)
+* [Reference link 30: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=30)
+* [Reference link 31: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=31)
+* [Reference link 32: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=32)
+* [Reference link 33: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=33)
+* [Reference link 34: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=34)
+* [Reference link 35: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=35)
+* [Reference link 36: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=36)
+* [Reference link 37: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=37)
+* [Reference link 38: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=38)
+* [Reference link 39: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=39)
+* [Reference link 40: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=40)
+* [Reference link 41: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=41)
+* [Reference link 42: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=42)
+* [Reference link 43: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=43)
+* [Reference link 44: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=44)
+* [Reference link 45: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=45)
+* [Reference link 46: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=46)
+* [Reference link 47: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=47)
+* [Reference link 48: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=48)
+* [Reference link 49: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=49)
+* [Reference link 50: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=50)
+* [Reference link 51: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=51)
+* [Reference link 52: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=52)
+* [Reference link 53: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=53)
+* [Reference link 54: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=54)
+* [Reference link 55: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=55)
+* [Reference link 56: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=56)
+* [Reference link 57: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=57)
+* [Reference link 58: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=58)
+* [Reference link 59: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=59)
+* [Reference link 60: Technical Specification Documentation](https://spec.modelcontextprotocol.io/v1/details?utm_source=wiki&utm_medium=referral&id=60)
+
+---
+We use cookies to improve your browsing experience. Click here to accept cookies. Subscribe to our newsletter. All rights reserved. Terms of service apply. Share on Twitter, Facebook, LinkedIn.

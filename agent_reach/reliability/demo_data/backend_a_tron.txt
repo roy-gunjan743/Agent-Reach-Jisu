@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>MCP (Tron) - Wikipedia</title>
+<script>var tracking = true;</script>
+<style>body { font-family: sans-serif; }</style>
+</head>
+<body>
+<nav class="navigation-sidebar">
+  <a href="/wiki/Main_Page">Main page</a>
+  <a href="/wiki/Special:Random">Random article</a>
+  <a href="/wiki/Help:Contents">Help</a>
+  <a href="/wiki/Donate">Donate to Wikipedia</a>
+</nav>
+
+<div class="header-banner">
+  <p>We use cookies to improve your experience. <button>Accept Cookies</button></p>
+</div>
+
+<h1>Master Control Program</h1>
+<p>From Wikipedia, the free encyclopedia</p>
+
+<div class="infobox">
+  <table>
+    <tr><th>Character</th><td>Master Control Program (MCP)</td></tr>
+    <tr><th>First appearance</th><td>Tron (1982)</td></tr>
+    <tr><th>Voiced by</th><td>David Warner</td></tr>
+    <tr><th>Created by</th><td>Steven Lisberger</td></tr>
+    <tr><th>Role</th><td>Rogue artificial intelligence / Main antagonist</td></tr>
+  </table>
+</div>
+
+<p>The <b>Master Control Program</b> (<b>MCP</b>) is a fictional rogue artificial intelligence and the primary antagonist in the 1982 science fiction film <i>Tron</i>, directed by Steven Lisberger and produced by Walt Disney Productions. Originally written by Walter Gibbs as an operating system program to manage computer mainframe operations at the fictional technology company ENCOM, the MCP was subsequently rewritten and weaponized by Ed Dillinger (David Warner) to steal intellectual property, including video games created by Kevin Flynn (Jeff Bridges).</p>
+
+<p>Within the digital computer world of the ENCOM mainframe, the MCP operates as an omnipotent dictator that forces other programs into gladiatorial gladiatorial digital games, such as Light Cycles and Disc Arena combat. Programs that defy the MCP or express belief in "Users" are systematically derezzed. The MCP continually seeks to assimilate external databases and systems, aiming to infiltrate the Pentagon and Kremlin mainframes, claiming: "I'm telling you, Dillinger, I'm going to run things around here. I can run computer systems 900 to 1200 times better than any human."</p>
+
+<h2>Characteristics and Reception</h2>
+<p>The MCP represents early cinematic anxieties regarding artificial intelligence, corporate surveillance, and rogue computing power. Unlike modern AI models that function through large language models or autonomous tool-calling protocols, the MCP was conceived as a centralized mainframe software system that subjugated subroutines and user applications. The visual manifestation of the MCP is a giant cylindrical rotating face rendered in glowing red computer graphics, accompanied by the cold, commanding voice of David Warner.</p>
+
+<p>The MCP was defeated when Kevin Flynn jumped into its beam of energy, distracting the defensive shields, allowing the security program Tron to throw his identity disc into the MCP's core processor, derezzing it and restoring freedom to the mainframe network.</p>
+
+<div class="share-buttons">
+  <p>Share this article: <a href="https://twitter.com/share">Twitter</a> | <a href="https://facebook.com/share">Facebook</a></p>
+  <p>Subscribe to our newsletter for daily film trivia.</p>
+</div>
+
+<footer class="footer-nav">
+  <p>Text is available under the Creative Commons Attribution-ShareAlike License 4.0; additional terms may apply.</p>
+  <p>Privacy Policy | About Wikipedia | Disclaimers | Contact Wikipedia | Code of Conduct | Mobile view</p>
+</footer>
+</body>
+</html>
