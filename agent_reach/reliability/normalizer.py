@@ -223,7 +223,27 @@ def _score_block(
     if char_len > 0 and (link_chars / char_len) > 0.4:
         score -= 4.0
 
+    # Wikipedia reference lists can contain many query keywords and links
+    # while providing no explanatory content for the judge.
+    if _is_reference_block(block):
+        score -= 100.0
+
     return score
+
+
+def _is_low_signal_intro(block: str) -> bool:
+    """Return True for document front matter that should not be kept alone."""
+    normalized = re.sub(r"\s+", " ", block).strip().lower()
+    return normalized.startswith("from wikipedia, the free encyclopedia")
+
+
+def _is_reference_block(block: str) -> bool:
+    """Return True for citation-heavy reference entries."""
+    text_lower = block.lower()
+    citation_count = len(re.findall(r"\[[^\]]+\]\([^)]+\)", block))
+    return citation_count >= 3 and (
+        re.match(r"^\d+\.", block) or "retrieved" in text_lower
+    )
 
 
 def _cut_to_sentence_boundary(text: str, budget: int) -> str:
@@ -382,18 +402,24 @@ def normalize(
         remaining_budget = max_chars
         header_block = ""
 
-    # Always keep intro block (idx 0)
-    selected_indices: set[int] = {0}
-    used_chars = len(raw_blocks[0]) + 2  # account for separator "\n\n"
+    # Keep the first meaningful block rather than source-specific front matter.
+    intro_index = next(
+        (idx for idx, block in enumerate(raw_blocks) if not _is_low_signal_intro(block)),
+        0,
+    )
+    selected_indices: set[int] = {intro_index}
+    used_chars = len(raw_blocks[intro_index]) + 2  # account for separator "\n\n"
 
     # Rank remaining blocks by score descending
     remaining_ranked = sorted(
-        [item for item in scored_blocks if item[0] != 0],
+        [item for item in scored_blocks if item[0] != intro_index],
         key=lambda item: item[1],
         reverse=True,
     )
 
     for idx, score, block in remaining_ranked:
+        if _is_reference_block(block):
+            continue
         block_len = len(block) + 2
         if used_chars + block_len <= remaining_budget:
             selected_indices.add(idx)

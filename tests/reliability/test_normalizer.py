@@ -122,6 +122,25 @@ def test_order_preserved_and_title_retained(sample_30k_jina_text: str):
         assert lower.index(intro_marker) < lower.index(arch_marker)
 
 
+def test_drops_wikipedia_front_matter_and_reference_blocks():
+    raw = (
+        "Title: Model Context Protocol\n"
+        "URL Source: https://example.com/mcp\n"
+        "Markdown Content:\n\n"
+        "From Wikipedia, the free encyclopedia\n\n"
+        "The Model Context Protocol is an open standard that connects AI agents "
+        "to external tools and data sources.\n\n"
+        "1. [Reference one](https://example.com/one). Retrieved 2025-01-01.\n"
+        "2. [Reference two](https://example.com/two). Retrieved 2025-01-01.\n"
+        "3. [Reference three](https://example.com/three). Retrieved 2025-01-01.\n"
+    )
+
+    result = normalize(raw, query="How does MCP connect AI agents to tools?", max_chars=250)
+
+    assert "connects AI agents to external tools" in result.text
+    assert "Reference one" not in result.text
+
+
 def test_no_mid_word_cuts():
     long_words = " ".join([f"unbreakablewordidentifier{i}" for i in range(200)])
     text = f"# Long Document\n\n{long_words}"
