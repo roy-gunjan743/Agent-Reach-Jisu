@@ -8,6 +8,7 @@ build/
 .env
 .agent-reach/
 Agent-reach-env/
+agent_reach_venv/
 *.log
 
 # Claude Code personal permission settings — local only, never commit

@@ -135,6 +135,28 @@ AI Agent 已经能帮你写代码、改文档、管项目——但你让它去�
 
 ## 快速上手
 
+## Gemma reliability judge
+
+Agent Reach's optional reliability router can use Gemma through the Gemini API
+to evaluate retrieved results before selecting a backend. Set the API key in
+your environment; never commit it to the repository:
+
+```bash
+set GEMINI_API_KEY=your-gemini-api-key
+```
+
+The model and API endpoint can be overridden without changing code:
+
+```bash
+set AGENT_REACH_JUDGE_MODEL=gemma-4-26b-a4b-it
+set AGENT_REACH_GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta
+set AGENT_REACH_JUDGE_MAX_CHARS=12000
+```
+
+Gemma returns structured scores for relevance, freshness, completeness, and
+confidence. The adaptive router uses those scores to accept a result or fall
+back to another backend.
+
 > ⚠️ **OpenClaw 用户请先确认 exec 权限已开启**
 >
 > Agent Reach 依赖 Agent 执行 shell 命令（`pip install`、`mcporter`、`twitter` 等）。如果你的 OpenClaw 使用了默认的 `messaging` 工具配置，Agent 将无法执行命令。**安装前请先开启 exec 权限**：

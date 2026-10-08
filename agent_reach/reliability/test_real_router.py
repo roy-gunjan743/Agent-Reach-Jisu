@@ -23,7 +23,7 @@ def main():
 
     print(f"✅ Received {len(result):,} characters")
 
-    print("\n🧠 Running Qwen semantic judge...")
+    print("\n🧠 Running Gemma 4 semantic judge via Gemini API...")
 
     evaluation = judge_result(QUERY, result)
 
