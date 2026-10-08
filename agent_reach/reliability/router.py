@@ -1,9 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from agent_reach.reliability.scorer import BackendStats
+
+
+def _clean_score(val: Any) -> float:
+    """Coerce and clamp score value to [0.0, 1.0]. Values 1 < x <= 100 are treated as percentages."""
+    if val is None:
+        return 0.0
+    try:
+        fval = float(val)
+    except (ValueError, TypeError):
+        return 0.0
+    if 1.0 < fval <= 100.0:
+        fval /= 100.0
+    return max(0.0, min(1.0, fval))
 
 
 @dataclass
@@ -33,6 +46,7 @@ class AdaptiveRouter:
         stats: dict[str, BackendStats] | None = None,
         quality_threshold: float = 0.65,
         judge: Callable[[str, str], dict] | None = None,
+        normalizer: Callable[[str, str], Any] | None = None,
     ):
         self.backends = backends
         self.stats = stats or {
@@ -41,6 +55,8 @@ class AdaptiveRouter:
         }
         self.quality_threshold = quality_threshold
         self._judge = judge
+        self.normalizer = normalizer
+        self.last_trace: list[dict[str, Any]] = []
 
     def _get_judge(self) -> Callable[[str, str], dict]:
         """Return the judge callable, lazily importing the default."""
@@ -51,14 +67,18 @@ class AdaptiveRouter:
         return judge_result
 
     def _quality_score(self, evaluation: dict) -> float:
-        """
-        Combine semantic quality dimensions into one score.
-        """
+        """Combine semantic quality dimensions into one score."""
+        has_metrics = any(
+            k in evaluation
+            for k in ("relevance", "freshness", "completeness", "confidence")
+        )
+        if not has_metrics and "score" in evaluation:
+            return _clean_score(evaluation["score"])
 
-        relevance = float(evaluation.get("relevance", 0))
-        freshness = float(evaluation.get("freshness", 0))
-        completeness = float(evaluation.get("completeness", 0))
-        confidence = float(evaluation.get("confidence", 0))
+        relevance = _clean_score(evaluation.get("relevance", 0))
+        freshness = _clean_score(evaluation.get("freshness", 0))
+        completeness = _clean_score(evaluation.get("completeness", 0))
+        confidence = _clean_score(evaluation.get("confidence", 0))
 
         return (
             relevance * 0.40
@@ -68,12 +88,9 @@ class AdaptiveRouter:
         )
 
     def route(self, query: str) -> BackendResult | None:
-        """
-        Try backends until a sufficiently good result is found.
-        """
+        """Try backends until a sufficiently good result is found."""
+        self.last_trace = []
 
-        # Deterministic order: when reliability scores tie (e.g. all 0),
-        # Python's sorted() is stable, so dict insertion order is preserved.
         insertion_order = list(self.stats.keys())
         ranked = sorted(
             self.stats.values(),
@@ -85,7 +102,6 @@ class AdaptiveRouter:
         )
 
         attempts: list[BackendResult] = []
-
         judge_fn = self._get_judge()
 
         for backend_stat in ranked:
@@ -96,100 +112,147 @@ class AdaptiveRouter:
 
             print(f"\n🔎 Trying backend: {backend_name}")
 
+            # 1. Fetch
             try:
-                result = self.backends[backend_name](query)
-
-                if not result or not result.strip():
-                    backend_stat.record_failure()
-
-                    print("   ❌ Empty result")
-                    continue
-
-                print(f"   📄 Received {len(result):,} characters")
-
-                evaluation = judge_fn(query, result)
-
-                score = self._quality_score(evaluation)
-
-                print(
-                    f"   Relevance:    {evaluation.get('relevance', 0):.2f}"
-                )
-                print(
-                    f"   Freshness:    {evaluation.get('freshness', 0):.2f}"
-                )
-                print(
-                    f"   Completeness: {evaluation.get('completeness', 0):.2f}"
-                )
-                print(
-                    f"   Confidence:   {evaluation.get('confidence', 0):.2f}"
-                )
-                print(f"   Quality:      {score:.2f}")
-                print(
-                    f"   Decision:     {evaluation.get('decision', 'unknown')}"
-                )
-
-                attempts.append(
-                    BackendResult(
-                        backend=backend_name,
-                        result=result,
-                        evaluation=evaluation,
-                        score=score,
-                    )
-                )
-
-                if (
-                    evaluation.get("decision") == "accept"
-                    and score >= self.quality_threshold
-                ):
-                    backend_stat.record_success(score)
-
-                    print(f"   ✅ ACCEPTED: {backend_name}")
-
-                    return attempts[-1]
-
-                backend_stat.record_failure(quality=score)
-
-                print(f"   ⚠️ REJECTED: {backend_name}")
-                print("   ↳ Falling back to next backend...")
-
+                raw_result = self.backends[backend_name](query)
             except Exception as exc:
                 backend_stat.record_failure()
+                err_msg = str(exc)
+                print(f"   ❌ Backend error: {err_msg}")
+                self.last_trace.append({
+                    "backend": backend_name,
+                    "outcome": "fetch_error",
+                    "chars": 0,
+                    "score": None,
+                    "evaluation": None,
+                    "error": err_msg,
+                })
+                continue
 
-                print(f"   ❌ Backend error: {exc}")
+            if not raw_result or not raw_result.strip():
+                backend_stat.record_failure()
+                print("   ❌ Empty result")
+                self.last_trace.append({
+                    "backend": backend_name,
+                    "outcome": "empty",
+                    "chars": 0,
+                    "score": None,
+                    "evaluation": None,
+                    "error": "Empty result",
+                })
+                continue
 
-        # If nothing passed the threshold, return the best result
-        # rather than returning nothing.
-        if attempts:
-            best = max(attempts, key=lambda item: item.score)
+            # 2. Normalize
+            if self.normalizer is not None:
+                norm_out = self.normalizer(raw_result, query)
+            else:
+                from agent_reach.reliability.normalizer import normalize
 
-            print(
-                f"\n⚠️ No backend passed the threshold."
-                f" Returning best result: {best.backend}"
+                norm_out = normalize(raw_result, query=query)
+
+            normalized_text = norm_out.text if hasattr(norm_out, "text") else str(norm_out)
+            chars = len(normalized_text)
+            print(f"   📄 Received {len(raw_result):,} characters -> normalized to {chars:,} characters")
+
+            # 3. Judge evaluation
+            try:
+                evaluation = judge_fn(query, normalized_text)
+            except Exception as exc:
+                err_msg = str(exc)
+                print(f"   ⚠️ judge unavailable: {err_msg}")
+                self.last_trace.append({
+                    "backend": backend_name,
+                    "outcome": "judge_error",
+                    "chars": chars,
+                    "score": None,
+                    "evaluation": None,
+                    "error": err_msg,
+                })
+                continue
+
+            if not isinstance(evaluation, dict) or evaluation.get("judge_error"):
+                reason = (
+                    evaluation.get("reason", "Judge error")
+                    if isinstance(evaluation, dict)
+                    else f"Judge returned non-dict: {type(evaluation).__name__}"
+                )
+                print(f"   ⚠️ judge unavailable: {reason}")
+                self.last_trace.append({
+                    "backend": backend_name,
+                    "outcome": "judge_error",
+                    "chars": chars,
+                    "score": None,
+                    "evaluation": evaluation if isinstance(evaluation, dict) else None,
+                    "error": reason,
+                })
+                continue
+
+            # 4. Normalize decision & scores
+            raw_decision = evaluation.get("decision")
+            decision = str(raw_decision).strip().lower() if raw_decision is not None else "reject"
+            evaluation["decision"] = decision
+
+            score = self._quality_score(evaluation)
+            evaluation["score"] = score
+
+            rel = _clean_score(evaluation.get("relevance", 0))
+            fresh = _clean_score(evaluation.get("freshness", 0))
+            comp = _clean_score(evaluation.get("completeness", 0))
+            conf = _clean_score(evaluation.get("confidence", 0))
+
+            print(f"   Relevance:    {rel:.2f}")
+            print(f"   Freshness:    {fresh:.2f}")
+            print(f"   Completeness: {comp:.2f}")
+            print(f"   Confidence:   {conf:.2f}")
+            print(f"   Quality:      {score:.2f}")
+            print(f"   Decision:     {decision.upper()}")
+            print(f"   Reason:       {evaluation.get('reason', '')}")
+
+            res_obj = BackendResult(
+                backend=backend_name,
+                result=raw_result,
+                evaluation=evaluation,
+                score=score,
             )
 
+            if decision == "accept" and score >= self.quality_threshold:
+                backend_stat.record_success(score)
+                print(f"   ✅ ACCEPTED: {backend_name}")
+                self.last_trace.append({
+                    "backend": backend_name,
+                    "outcome": "accepted",
+                    "chars": chars,
+                    "score": score,
+                    "evaluation": evaluation,
+                    "error": None,
+                })
+                return res_obj
+
+            backend_stat.record_failure(quality=score)
+            print(f"   ⚠️ REJECTED: {backend_name}")
+            print("   ↳ Falling back to next backend...")
+            attempts.append(res_obj)
+            self.last_trace.append({
+                "backend": backend_name,
+                "outcome": "rejected",
+                "chars": chars,
+                "score": score,
+                "evaluation": evaluation,
+                "error": None,
+            })
+
+        if attempts:
+            best = max(attempts, key=lambda item: item.score)
+            print(
+                f"\n⚠️ No backend passed; returning best rejected result: {best.backend}"
+            )
             return best
 
-        print("\n❌ No usable backend result found.")
-
+        print("\n❌ Judge unavailable, no verdict.")
         return None
 
     def stats_summary(self) -> dict[str, dict]:
-        """
-        Return per-backend statistics as a plain dict for inspection/logging.
-
-        Example return value::
-
-            {
-                "jina-mcp-wiki": {
-                    "successes": 1,
-                    "failures": 0,
-                    "quality_score": 0.82,
-                    "success_rate": 1.0,
-                    "reliability_score": 0.82,
-                },
-                ...
-            }
-        """
+        """Return per-backend statistics as a plain dict for inspection/logging."""
         summary: dict[str, dict] = {}
         for name, stat in self.stats.items():
             summary[name] = {

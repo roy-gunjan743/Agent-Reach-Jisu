@@ -1,20 +1,25 @@
 # Reliability Layer Demo — Judge Quickstart
 
-Run the self-contained fallback demo in one command:
+Run the adaptive router fallback demo in one command:
 
 ```bash
 python -m agent_reach.reliability.demo
 ```
 
-### Pre-Demo Checklist (Optional — for live Gemma evaluation)
-1. Start Ollama: `ollama serve`
-2. Pull the model: `ollama pull gemma2:2b` (or set `GEMMA_MODEL=...`)
+### Environment Requirements
+
+Set your Gemini API key in your environment before running:
+
+```bash
+export GEMINI_API_KEY="your-gemini-api-key"   # Linux/macOS
+$env:GEMINI_API_KEY="your-gemini-api-key"     # PowerShell
+set GEMINI_API_KEY=your-gemini-api-key        # Windows CMD
+```
 
 ### Demo Execution Flags
-- **Zero-Setup / Projector Mode**: `python -m agent_reach.reliability.demo --mock --fast`
-- **Force Live LLM**: `python -m agent_reach.reliability.demo --live`
+- **Offline Fixtures**: `python -m agent_reach.reliability.demo --offline-fixtures` (uses static text fixtures, requires `GEMINI_API_KEY` for Gemma evaluation)
 - **Custom Query**: `python -m agent_reach.reliability.demo --query "What is MCP?"`
 - **Custom Output Limit**: `python -m agent_reach.reliability.demo --max-chars 3000`
 
-### Resilience Guarantee
-If Ollama is offline or network fails, the demo auto-switches to mock evaluation and bundled fixtures, guaranteeing a zero-crash presentation.
+### Real Evaluation Pipeline
+The demo uses real web backends (Backend A: Direct HTTP Tron article, Backend B: Jina Reader MCP article), passes content through `agent_reach.reliability.normalizer`, and evaluates results using Gemma 4 via the Gemini API. All reported scores, metrics, decisions, and fallback decisions come directly from the live Gemma judge.

@@ -2,11 +2,11 @@
 
 Offline tests (always run in CI):
     Use fake backends + stub judges to verify fallback mechanics, stats
-    recording, error handling, and deterministic ordering.
+    recording, error handling, deterministic ordering, and judge outages.
 
 Live tests (opt-in):
-    Marked ``@pytest.mark.live``, skipped unless ``RUN_LIVE=1`` is set
-    and a judge backend is available (GEMINI_API_KEY or local Ollama).
+    Marked ``@pytest.mark.live``, skipped unless ``RUN_LIVE=1`` is set.
+    Fails if ``GEMINI_API_KEY`` is not set.
 
 Run offline::
 
@@ -223,8 +223,9 @@ class TestFallbackOffline:
         result = router.route(QUERY)
 
         assert result is not None
-        # Both rejected — best score wins
         assert result.score > 0
+        assert len(router.last_trace) == 2
+        assert all(t["outcome"] == "rejected" for t in router.last_trace)
 
     def test_deterministic_a_then_b_order(self) -> None:
         """With fresh stats (all 0), backends are tried in insertion order."""
@@ -244,7 +245,6 @@ class TestFallbackOffline:
         )
         router.route(QUERY)
 
-        # A is called first (and accepted), B is never reached.
         assert call_order == ["a"]
 
     def test_insertion_order_preserved_on_fallback(self) -> None:
@@ -295,8 +295,13 @@ class TestFallbackOffline:
         summary = router.stats_summary()
         assert "a" in summary
         entry = summary["a"]
-        for key in ("successes", "failures", "quality_score",
-                     "success_rate", "reliability_score"):
+        for key in (
+            "successes",
+            "failures",
+            "quality_score",
+            "success_rate",
+            "reliability_score",
+        ):
             assert key in entry
 
     def test_backend_result_fields(self) -> None:
@@ -339,45 +344,148 @@ class TestFallbackOffline:
         assert stat.failures == 1
         assert stat.quality_score == original_quality  # unchanged
 
+    def test_judge_error_does_not_count_as_failure(self) -> None:
+        """Judge error must NOT record a failure on the backend."""
+        def error_judge(q: str, r: str) -> dict:
+            return {"judge_error": True, "reason": "API rate limit"}
+
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "some text"},
+            judge=error_judge,
+        )
+        result = router.route(QUERY)
+
+        assert result is None
+        assert router.stats["a"].failures == 0
+        assert len(router.last_trace) == 1
+        assert router.last_trace[0]["outcome"] == "judge_error"
+
+    def test_judge_raising_exception_handles_as_judge_error(self) -> None:
+        """Judge raising an exception is handled as judge_error without recording backend failure."""
+        def raising_judge(q: str, r: str) -> dict:
+            raise RuntimeError("Judge timeout")
+
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "some text"},
+            judge=raising_judge,
+        )
+        result = router.route(QUERY)
+
+        assert result is None
+        assert router.stats["a"].failures == 0
+        assert len(router.last_trace) == 1
+        assert router.last_trace[0]["outcome"] == "judge_error"
+
+    def test_judge_decision_case_insensitive_accept(self) -> None:
+        """Decision 'Accept' (capitalized) is normalized to 'accept' and accepted."""
+        def accept_judge(q: str, r: str) -> dict:
+            return {
+                "decision": "Accept",
+                "relevance": 0.9,
+                "freshness": 0.9,
+                "completeness": 0.9,
+                "confidence": 0.9,
+                "reason": "good",
+            }
+
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "content"},
+            judge=accept_judge,
+        )
+        result = router.route(QUERY)
+
+        assert result is not None
+        assert result.evaluation["decision"] == "accept"
+        assert router.last_trace[0]["outcome"] == "accepted"
+
+    def test_score_coercion_percentage_scale(self) -> None:
+        """Score of 90 on 100-scale is normalized to 0.90."""
+        def scale_judge(q: str, r: str) -> dict:
+            return {
+                "decision": "accept",
+                "score": 90,
+                "reason": "high score",
+            }
+
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "content"},
+            judge=scale_judge,
+        )
+        result = router.route(QUERY)
+
+        assert result is not None
+        assert abs(result.score - 0.90) < 1e-5
+
+    def test_score_null_handling(self) -> None:
+        """Null/None score values normalize safely to 0.0."""
+        def null_score_judge(q: str, r: str) -> dict:
+            return {
+                "decision": "reject",
+                "relevance": None,
+                "freshness": None,
+                "completeness": None,
+                "confidence": None,
+                "reason": "none scores",
+            }
+
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "content"},
+            judge=null_score_judge,
+        )
+        result = router.route(QUERY)
+
+        assert result is not None
+        assert result.score == 0.0
+
+    def test_fetch_error_on_a_accept_on_b_trace(self) -> None:
+        """Fetch error on A + accept on B records outcome 'fetch_error' for A in trace."""
+        def backend_a(q: str) -> str:
+            raise RuntimeError("HTTP 500 error")
+
+        def backend_b(q: str) -> str:
+            return "Good MCP content"
+
+        router = AdaptiveRouter(
+            backends={"a": backend_a, "b": backend_b},
+            judge=_stub_judge_accept,
+        )
+        result = router.route(QUERY)
+
+        assert result is not None
+        assert result.backend == "b"
+        assert len(router.last_trace) == 2
+        assert router.last_trace[0]["outcome"] == "fetch_error"
+        assert router.last_trace[1]["outcome"] == "accepted"
+
+    def test_quality_running_average(self) -> None:
+        """Success 0.9 then reject 0.2 produces running average quality score 0.55."""
+        stat = BackendStats("test_backend")
+        stat.record_success(0.9)
+        assert abs(stat.quality_score - 0.9) < 1e-5
+        stat.record_failure(0.2)
+        assert abs(stat.quality_score - 0.55) < 1e-5
+
 
 # =========================================================================
 # LIVE TESTS
 # =========================================================================
-
-def _judge_available() -> bool:
-    """Check if a judge backend (Gemini key or local Ollama) is available."""
-    if os.environ.get("GEMINI_API_KEY"):
-        return True
-    import urllib.request
-    try:
-        req = urllib.request.Request(
-            "http://localhost:11434/api/tags", method="GET",
-        )
-        with urllib.request.urlopen(req, timeout=3):
-            return True
-    except Exception:
-        return False
-
 
 _skip_live = pytest.mark.skipif(
     os.environ.get("RUN_LIVE", "0") != "1",
     reason="Live tests disabled (set RUN_LIVE=1 to enable)",
 )
 
-_skip_no_judge = pytest.mark.skipif(
-    os.environ.get("RUN_LIVE", "0") == "1" and not _judge_available(),
-    reason="No judge backend available (need GEMINI_API_KEY or local Ollama)",
-)
-
 
 @pytest.mark.live
 @_skip_live
-@_skip_no_judge
 class TestFallbackLive:
-    """Live tests — requires network + judge backend."""
+    """Live tests — requires network + GEMINI_API_KEY."""
 
     def test_real_fallback_a_reject_b_accept(self) -> None:
         """End-to-end: A (Tron) rejected → B (MCP) accepted."""
+        if not os.environ.get("GEMINI_API_KEY"):
+            pytest.fail("GEMINI_API_KEY is missing (required when RUN_LIVE=1)")
+
         from agent_reach.reliability.backends import DEMO_QUERY, build_real_router
 
         router = build_real_router()  # uses real judge
@@ -387,6 +495,12 @@ class TestFallbackLive:
         assert result.backend == "jina-mcp-wiki"
         assert result.evaluation.get("decision") == "accept"
 
-        stats = router.stats_summary()
-        assert stats["direct-http-tron"]["failures"] >= 1
-        assert stats["jina-mcp-wiki"]["successes"] >= 1
+        assert len(router.last_trace) == 2
+        trace_a, trace_b = router.last_trace[0], router.last_trace[1]
+
+        assert trace_a["backend"] == "direct-http-tron"
+        if trace_a["outcome"] != "rejected":
+            pytest.fail(f"Backend A outcome was '{trace_a['outcome']}': this is not a semantic rejection")
+
+        assert trace_b["backend"] == "jina-mcp-wiki"
+        assert trace_b["outcome"] == "accepted"

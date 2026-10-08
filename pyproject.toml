@@ -36,6 +36,7 @@ dependencies = [
     "rich>=13.0",
     "yt-dlp[default]>=2026.07.04",
     "google-genai>=1.0",
+    "httpx>=0.24.0",
 ]
 
 [project.optional-dependencies]
@@ -85,5 +86,5 @@ exclude = ["^tests/"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "live: requires network and a judge backend (GEMINI_API_KEY or local Ollama)",
+    "live: requires network and GEMINI_API_KEY for Gemma 4 via Gemini API",
 ]

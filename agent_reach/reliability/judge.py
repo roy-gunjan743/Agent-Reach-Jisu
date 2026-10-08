@@ -1,10 +1,10 @@
 import json
 import os
 
-from google import genai
-from google.genai import errors as genai_errors
 import httpx
 from dotenv import load_dotenv
+from google import genai
+from google.genai import errors as genai_errors
 
 load_dotenv()
 
@@ -24,6 +24,7 @@ class JudgeError(RuntimeError):
 
 def _rejected_evaluation(reason: str) -> dict:
     return {
+        "judge_error": True,
         "relevance": 0.0,
         "freshness": 0.0,
         "completeness": 0.0,

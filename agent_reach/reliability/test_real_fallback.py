@@ -60,13 +60,16 @@ def main() -> None:
 
     router.print_stats()
 
-    # Verify expected outcome: A rejected, B accepted, final is B.
-    stats = router.stats_summary()
-    a_stats = stats.get("direct-http-tron", {})
-    b_stats = stats.get("jina-mcp-wiki", {})
+    trace = router.last_trace
+    trace_a = next((t for t in trace if t["backend"] == "direct-http-tron"), None)
+    trace_b = next((t for t in trace if t["backend"] == "jina-mcp-wiki"), None)
 
-    a_rejected = a_stats.get("failures", 0) >= 1
-    b_accepted = b_stats.get("successes", 0) >= 1
+    if trace_a and trace_a["outcome"] in ("fetch_error", "judge_error"):
+        print(f"\n❌ FAIL — Backend A outcome was {trace_a['outcome']}: this is not a semantic rejection.")
+        sys.exit(1)
+
+    a_rejected = trace_a is not None and trace_a["outcome"] == "rejected"
+    b_accepted = trace_b is not None and trace_b["outcome"] == "accepted"
     final_is_b = result.backend == "jina-mcp-wiki"
 
     print("\n" + "=" * 60)

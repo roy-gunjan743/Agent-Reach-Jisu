@@ -55,6 +55,86 @@
 
 ---
 
+## Adaptive Semantic Router (Hackathon: Open-Source AI + Build with Gemma)
+
+We extended Agent Reach with a Gemma-powered semantic routing layer that evaluates whether a backend's real result actually answered the user's question and automatically falls back to another backend when it didn't.
+
+### Problem
+Backend HTTP reachability does not guarantee answer quality. A web reader may successfully return a 200 OK response with 100,000 characters of clean text, but if the content is about the wrong topic (e.g., a 1982 sci-fi movie instead of an AI protocol), traditional status-code checks treat it as a success.
+
+### Solution
+The Adaptive Semantic Router uses Gemma as a real-time semantic judge. After content normalization, Gemma evaluates the text along four quality dimensions (relevance, freshness, completeness, confidence) and returns a structured decision (`accept` or `reject`). If rejected, the router automatically triggers fallback to the next candidate backend.
+
+```
+Query -> Backend A (Direct HTTP Tron) -> Result -> Gemma Judge -> REJECT -> Fallback -> Backend B (Jina Reader MCP) -> Gemma Judge -> ACCEPT
+```
+
+### Technologies & AI Model
+- **Core Framework**: Python 3.10+, Agent Reach
+- **AI Model**: **Gemma 4 via Gemini API** (default model: `gemma-4-26b-a4b-it`)
+- **API & Protocol**: Gemini API (via `google-genai` SDK)
+- **Web Reader**: Jina Reader (`agent_reach.reliability.executor.JinaExecutor`) & Direct HTTP (`DirectHTTPExecutor`)
+- **Dependencies**: `google-genai`, `python-dotenv`, `httpx` (declared in `pyproject.toml`)
+
+### Role of Gemma
+Gemma acts as the semantic judge. Its evaluation directly determines whether the router accepts the result or falls back to another backend.
+
+### Setup & Reproduction
+
+1. **Install package & dependencies**:
+   ```bash
+   pip install -e .
+   ```
+
+2. **Configure Gemini API Key**:
+   Create a `.env` file or export `GEMINI_API_KEY`:
+   ```bash
+   # Linux/macOS
+   export GEMINI_API_KEY="your-gemini-api-key"
+
+   # PowerShell
+   $env:GEMINI_API_KEY="your-gemini-api-key"
+
+   # Windows CMD
+   set GEMINI_API_KEY=your-gemini-api-key
+   ```
+   Get an API key at [Google AI Studio](https://aistudio.google.com/app/apikey). Optional environment overrides:
+   - `AGENT_REACH_JUDGE_MODEL`: model override (default: `gemma-4-26b-a4b-it`)
+   - `AGENT_REACH_GEMINI_API_URL`: endpoint override
+   - `AGENT_REACH_JUDGE_MAX_CHARS`: maximum characters sent to judge (default: `12000`)
+
+3. **Run the Live Demo**:
+   ```bash
+   python -m agent_reach.reliability.demo
+   ```
+
+4. **Run Tests**:
+   - **Offline tests** (CI-safe, stub judge, no API key needed):
+     ```bash
+     pytest tests/test_real_fallback.py -q
+     ```
+   - **Live test** (requires live Gemini API key):
+     ```bash
+     RUN_LIVE=1 GEMINI_API_KEY=your-key pytest tests/test_real_fallback.py -q
+     ```
+
+### Hackathon Verification (Track 1: Open-Source AI + Build with Gemma)
+- **Model Identified**: `gemma-4-26b-a4b-it` (Gemma 4 via Gemini API)
+- **AI Role**: Semantic quality judge driving multi-backend fallback
+- **Reproduction**: Run `python -m agent_reach.reliability.demo` with `GEMINI_API_KEY` set.
+- **Licence & Terms**: See the official Gemma terms at [Google Gemma Terms](https://ai.google.dev/gemma/terms).
+
+### Honest Limitations
+- **Backend scope**: Currently wired with two real backends for demonstration (`direct-http-tron` and `jina-mcp-wiki`); Backend A is deliberately pinned to a wrong-topic article to demonstrate semantic fallback.
+- **Network & API dependencies**: Relies on live web access and Gemini API quota/rate limits.
+- **Excerpt bounds**: The judge receives a normalized excerpt capped at `MAX_RESULT_CHARS` (12,000 chars).
+- **Non-deterministic scoring**: Model evaluations depend on LLM inference and temperature setting (0.0).
+- **Persistence**: Per-backend statistics are in-memory only and reset when process terminates.
+
+---
+
+---
+
 ## 为什么需要 Agent Reach？
 
 AI Agent 已经能帮你写代码、改文档、管项目——但你让它去网上找点东西，它就抓瞎了：
@@ -134,28 +214,6 @@ AI Agent 已经能帮你写代码、改文档、管项目——但你让它去�
 ---
 
 ## 快速上手
-
-## Gemma reliability judge
-
-Agent Reach's optional reliability router can use Gemma through the Gemini API
-to evaluate retrieved results before selecting a backend. Set the API key in
-your environment; never commit it to the repository:
-
-```bash
-set GEMINI_API_KEY=your-gemini-api-key
-```
-
-The model and API endpoint can be overridden without changing code:
-
-```bash
-set AGENT_REACH_JUDGE_MODEL=gemma-4-26b-a4b-it
-set AGENT_REACH_GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta
-set AGENT_REACH_JUDGE_MAX_CHARS=12000
-```
-
-Gemma returns structured scores for relevance, freshness, completeness, and
-confidence. The adaptive router uses those scores to accept a result or fall
-back to another backend.
 
 > ⚠️ **OpenClaw 用户请先确认 exec 权限已开启**
 >

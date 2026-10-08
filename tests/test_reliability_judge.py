@@ -2,8 +2,8 @@ import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from google.genai import errors as genai_errors
 import httpx
+from google.genai import errors as genai_errors
 
 from agent_reach.reliability.judge import judge_result
 
