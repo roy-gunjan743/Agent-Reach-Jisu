@@ -14,13 +14,11 @@ import os
 import sys
 import time
 
-from dotenv import load_dotenv
-
 from agent_reach.reliability.backends import (
     DEMO_QUERY,
     build_real_router,
 )
-from agent_reach.reliability.judge import MODEL
+from agent_reach.reliability.judge import MODEL, load_env
 from agent_reach.reliability.normalizer import normalize
 from agent_reach.reliability.router import AdaptiveRouter
 
@@ -44,7 +42,7 @@ def _load_demo_fixture(name: str) -> str:
 
 def preflight_check() -> str | None:
     """Check for GEMINI_API_KEY environment variable (loading .env first)."""
-    load_dotenv()
+    load_env()
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return (

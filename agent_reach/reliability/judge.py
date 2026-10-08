@@ -3,12 +3,20 @@ import os
 import time
 
 import httpx
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
-load_dotenv()
+
+def load_env() -> None:
+    found = find_dotenv(usecwd=True)
+    if found:
+        load_dotenv(found)
+    load_dotenv()
+
+
+load_env()
 
 GEMINI_API_URL = os.getenv(
     "AGENT_REACH_GEMINI_API_URL",
@@ -83,7 +91,7 @@ def _parse_evaluation(raw: str) -> dict:
 
 
 def judge_result(query: str, result: str) -> dict:
-    load_dotenv()
+    load_env()
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return _rejected_evaluation("Gemini API key is missing")
@@ -119,14 +127,13 @@ Keep reason under 10 words.
     max_retries = int(os.getenv("AGENT_REACH_JUDGE_RETRIES", "1"))
     backoff_sec = float(os.getenv("AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC", "2.0"))
 
-    client = genai.Client(
-        api_key=api_key,
-        http_options=types.HttpOptions(timeout=timeout_ms),
-    )
-
     response = None
     for attempt in range(1 + max_retries):
         try:
+            client = genai.Client(
+                api_key=api_key,
+                http_options=types.HttpOptions(timeout=timeout_ms),
+            )
             response = client.models.generate_content(
                 model=MODEL,
                 contents=prompt,
@@ -138,7 +145,9 @@ Keep reason under 10 words.
                 continue
             return _rejected_evaluation("Gemini API request timed out")
         except genai_errors.APIError as exc:
-            if attempt < max_retries:
+            code = getattr(exc, "code", None)
+            should_retry = code == 429 or (isinstance(code, int) and code >= 500)
+            if should_retry and attempt < max_retries:
                 time.sleep(backoff_sec)
                 continue
             return _rejected_evaluation(f"Gemini API error: {exc}")

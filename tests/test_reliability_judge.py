@@ -33,14 +33,17 @@ def test_judge_accepts_valid_gemma_evaluation():
     with patch(
         "agent_reach.reliability.judge.genai.Client",
         return_value=mock_client(valid_evaluation()),
-    ) as client_factory, patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+    ) as client_factory, patch.dict(
+        "os.environ",
+        {"GEMINI_API_KEY": "test-key", "AGENT_REACH_JUDGE_TIMEOUT_MS": "30000"},
+    ):
         evaluation = judge_result("What is MCP?", "MCP connects agents to tools.")
 
     assert evaluation["decision"] == "accept"
-    client_factory.assert_called_once_with(
-        api_key="test-key",
-        http_options=patch.object,  # matched flexibly
-    )
+    client_factory.assert_called_once()
+    _, kwargs = client_factory.call_args
+    assert kwargs["api_key"] == "test-key"
+    assert kwargs["http_options"].timeout == 30000
 
 
 def test_judge_accepts_fenced_json():
@@ -201,3 +204,30 @@ def test_judge_fails_after_max_retries():
     assert evaluation["judge_error"] is True
     assert "Rate limit" in evaluation["reason"]
     assert mock_gen.generate_content.call_count == 2
+
+
+def test_judge_401_api_error_no_retry_no_sleep():
+    api_error = genai_errors.APIError(
+        401,
+        {"error": {"message": "API key invalid"}},
+    )
+    with patch(
+        "agent_reach.reliability.judge.genai.Client",
+        side_effect=api_error,
+    ) as client_factory, patch(
+        "agent_reach.reliability.judge.time.sleep"
+    ) as mock_sleep, patch.dict(
+        "os.environ",
+        {
+            "GEMINI_API_KEY": "test-key",
+            "AGENT_REACH_JUDGE_RETRIES": "3",
+            "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01",
+        },
+    ):
+        evaluation = judge_result("query", "result")
+
+    assert evaluation["judge_error"] is True
+    assert "API key invalid" in evaluation["reason"]
+    client_factory.assert_called_once()
+    mock_sleep.assert_not_called()
+

@@ -93,14 +93,7 @@ with coverage for:
 - HTTP transport errors
 - Timeout handling
 
-The focused reliability test run completed successfully:
-
-```text
-24 passed, 1 skipped
-```
-
-The skipped test is the optional live/API-dependent case; the deterministic
-tests passed.
+Run `python -m pytest -q` for current results.
 
 ### 6. Updated documentation and configuration templates
 
@@ -158,11 +151,7 @@ does not replace the backend or router ownership of other team members.
 
 ## Git and Repository Status
 
-The completed contribution was committed as:
-
-```text
-d6a1b7f feat: integrate Gemma semantic judge
-```
+The completed contribution was committed on the team repository branch.
 
 It was pushed to the team repository:
 
@@ -170,7 +159,7 @@ It was pushed to the team repository:
 https://github.com/roy-gunjan743/Agent-Reach-Jisu
 ```
 
-The repository branch was verified to point to commit `d6a1b7f`.
+The repository branch was verified to include the Gemma judge integration.
 
 ## Security Note
 

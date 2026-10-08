@@ -23,9 +23,9 @@ import sys
 
 
 def main() -> None:
-    from dotenv import load_dotenv
+    from agent_reach.reliability.judge import load_env
 
-    load_dotenv()
+    load_env()
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print(
