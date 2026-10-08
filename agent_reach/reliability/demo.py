@@ -14,10 +14,14 @@ import os
 import sys
 import time
 
+from dotenv import load_dotenv
+
 from agent_reach.reliability.backends import (
     DEMO_QUERY,
     build_real_router,
 )
+from agent_reach.reliability.judge import MODEL
+from agent_reach.reliability.normalizer import normalize
 from agent_reach.reliability.router import AdaptiveRouter
 
 # Ensure Windows console handles UTF-8 / symbols safely
@@ -39,7 +43,8 @@ def _load_demo_fixture(name: str) -> str:
 
 
 def preflight_check() -> str | None:
-    """Check for GEMINI_API_KEY environment variable."""
+    """Check for GEMINI_API_KEY environment variable (loading .env first)."""
+    load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return (
@@ -78,7 +83,11 @@ def run_demo(
     print("         AGENT REACH: ADAPTIVE RELIABILITY LAYER DEMO             ")
     print("===================================================================")
     print(f"Query: {query}")
+    print(f"Model: {MODEL} via Gemini API")
     print("-------------------------------------------------------------------")
+
+    if not fast:
+        time.sleep(0.35)
 
     if router is None:
         if offline_fixtures:
@@ -92,9 +101,12 @@ def run_demo(
                 "direct-http-tron": fixture_a,
                 "jina-mcp-wiki": fixture_b,
             }
-            router = AdaptiveRouter(backends=backends)
+            router = AdaptiveRouter(
+                backends=backends,
+                normalizer=lambda text, q: normalize(text, query=q, max_chars=max_chars),
+            )
         else:
-            router = build_real_router()
+            router = build_real_router(max_chars=max_chars)
 
     result = router.route(query)
 

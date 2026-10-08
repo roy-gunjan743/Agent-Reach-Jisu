@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -25,6 +26,7 @@ class BackendResult:
     result: str
     evaluation: dict
     score: float
+    partial_judge_outage: bool = False
 
 
 class AdaptiveRouter:
@@ -104,6 +106,9 @@ class AdaptiveRouter:
         attempts: list[BackendResult] = []
         judge_fn = self._get_judge()
 
+        from agent_reach.reliability.judge import MODEL, judge_result
+        is_default_gemma = (self._judge is None) or (judge_fn is judge_result) or (getattr(judge_fn, "__name__", "") == "judge_result")
+
         for backend_stat in ranked:
             backend_name = backend_stat.backend
 
@@ -126,6 +131,7 @@ class AdaptiveRouter:
                     "score": None,
                     "evaluation": None,
                     "error": err_msg,
+                    "latency_ms": 0.0,
                 })
                 continue
 
@@ -139,6 +145,7 @@ class AdaptiveRouter:
                     "score": None,
                     "evaluation": None,
                     "error": "Empty result",
+                    "latency_ms": 0.0,
                 })
                 continue
 
@@ -155,9 +162,12 @@ class AdaptiveRouter:
             print(f"   📄 Received {len(raw_result):,} characters -> normalized to {chars:,} characters")
 
             # 3. Judge evaluation
+            t_judge_start = time.perf_counter()
             try:
                 evaluation = judge_fn(query, normalized_text)
+                latency_ms = (time.perf_counter() - t_judge_start) * 1000
             except Exception as exc:
+                latency_ms = (time.perf_counter() - t_judge_start) * 1000
                 err_msg = str(exc)
                 print(f"   ⚠️ judge unavailable: {err_msg}")
                 self.last_trace.append({
@@ -167,6 +177,7 @@ class AdaptiveRouter:
                     "score": None,
                     "evaluation": None,
                     "error": err_msg,
+                    "latency_ms": latency_ms,
                 })
                 continue
 
@@ -184,6 +195,7 @@ class AdaptiveRouter:
                     "score": None,
                     "evaluation": evaluation if isinstance(evaluation, dict) else None,
                     "error": reason,
+                    "latency_ms": latency_ms,
                 })
                 continue
 
@@ -199,6 +211,11 @@ class AdaptiveRouter:
             fresh = _clean_score(evaluation.get("freshness", 0))
             comp = _clean_score(evaluation.get("completeness", 0))
             conf = _clean_score(evaluation.get("confidence", 0))
+
+            if is_default_gemma:
+                print(f"   🧠 Gemma 4 evaluation ({MODEL}, {latency_ms:.0f} ms):")
+            else:
+                print(f"   🧠 Judge evaluation ({latency_ms:.0f} ms):")
 
             print(f"   Relevance:    {rel:.2f}")
             print(f"   Freshness:    {fresh:.2f}")
@@ -225,6 +242,7 @@ class AdaptiveRouter:
                     "score": score,
                     "evaluation": evaluation,
                     "error": None,
+                    "latency_ms": latency_ms,
                 })
                 return res_obj
 
@@ -239,14 +257,27 @@ class AdaptiveRouter:
                 "score": score,
                 "evaluation": evaluation,
                 "error": None,
+                "latency_ms": latency_ms,
             })
+
+        judge_error_backends = [
+            t["backend"] for t in self.last_trace if t["outcome"] == "judge_error"
+        ]
 
         if attempts:
             best = max(attempts, key=lambda item: item.score)
-            print(
-                f"\n⚠️ No backend passed; returning best rejected result: {best.backend}"
-            )
+            if judge_error_backends:
+                best.partial_judge_outage = True
+                print(f"\n⚠️ judge unavailable for: {', '.join(judge_error_backends)}")
+                print(f"⚠️ Returning best rejected result: {best.backend}")
+            else:
+                print(
+                    f"\n⚠️ No backend passed; returning best rejected result: {best.backend}"
+                )
             return best
+
+        if judge_error_backends:
+            print(f"\n⚠️ judge unavailable for: {', '.join(judge_error_backends)}")
 
         print("\n❌ Judge unavailable, no verdict.")
         return None

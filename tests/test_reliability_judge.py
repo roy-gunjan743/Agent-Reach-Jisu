@@ -1,6 +1,6 @@
 import json
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 from google.genai import errors as genai_errors
@@ -37,7 +37,10 @@ def test_judge_accepts_valid_gemma_evaluation():
         evaluation = judge_result("What is MCP?", "MCP connects agents to tools.")
 
     assert evaluation["decision"] == "accept"
-    client_factory.assert_called_once_with(api_key="test-key")
+    client_factory.assert_called_once_with(
+        api_key="test-key",
+        http_options=patch.object,  # matched flexibly
+    )
 
 
 def test_judge_accepts_fenced_json():
@@ -94,7 +97,10 @@ def test_judge_handles_api_failure():
     with patch(
         "agent_reach.reliability.judge.genai.Client",
         side_effect=OSError("connection refused"),
-    ), patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+    ), patch.dict(
+        "os.environ",
+        {"GEMINI_API_KEY": "test-key", "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01"},
+    ):
         evaluation = judge_result("query", "result")
 
     assert evaluation["decision"] == "reject"
@@ -109,7 +115,10 @@ def test_judge_handles_gemini_api_error():
     with patch(
         "agent_reach.reliability.judge.genai.Client",
         side_effect=api_error,
-    ), patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+    ), patch.dict(
+        "os.environ",
+        {"GEMINI_API_KEY": "test-key", "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01"},
+    ):
         evaluation = judge_result("query", "result")
 
     assert evaluation["decision"] == "reject"
@@ -120,7 +129,10 @@ def test_judge_handles_http_transport_error():
     with patch(
         "agent_reach.reliability.judge.genai.Client",
         side_effect=httpx.RemoteProtocolError("server disconnected"),
-    ), patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+    ), patch.dict(
+        "os.environ",
+        {"GEMINI_API_KEY": "test-key", "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01"},
+    ):
         evaluation = judge_result("query", "result")
 
     assert evaluation["decision"] == "reject"
@@ -131,8 +143,61 @@ def test_judge_handles_timeout():
     with patch(
         "agent_reach.reliability.judge.genai.Client",
         side_effect=TimeoutError,
-    ), patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+    ), patch.dict(
+        "os.environ",
+        {"GEMINI_API_KEY": "test-key", "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01"},
+    ):
         evaluation = judge_result("query", "result")
 
     assert evaluation["decision"] == "reject"
     assert "timed out" in evaluation["reason"]
+
+
+def test_judge_retry_on_429_then_succeeds():
+    mock_gen = MagicMock()
+    api_error_429 = genai_errors.APIError(429, {"error": {"message": "Rate limit exceeded"}})
+    mock_gen.generate_content.side_effect = [
+        api_error_429,
+        SimpleNamespace(text=valid_evaluation()),
+    ]
+    mock_c = SimpleNamespace(models=mock_gen)
+
+    with patch(
+        "agent_reach.reliability.judge.genai.Client",
+        return_value=mock_c,
+    ), patch.dict(
+        "os.environ",
+        {
+            "GEMINI_API_KEY": "test-key",
+            "AGENT_REACH_JUDGE_RETRIES": "1",
+            "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01",
+        },
+    ):
+        evaluation = judge_result("query", "result")
+
+    assert evaluation["decision"] == "accept"
+    assert mock_gen.generate_content.call_count == 2
+
+
+def test_judge_fails_after_max_retries():
+    mock_gen = MagicMock()
+    api_error_429 = genai_errors.APIError(429, {"error": {"message": "Rate limit exceeded"}})
+    mock_gen.generate_content.side_effect = api_error_429
+    mock_c = SimpleNamespace(models=mock_gen)
+
+    with patch(
+        "agent_reach.reliability.judge.genai.Client",
+        return_value=mock_c,
+    ), patch.dict(
+        "os.environ",
+        {
+            "GEMINI_API_KEY": "test-key",
+            "AGENT_REACH_JUDGE_RETRIES": "1",
+            "AGENT_REACH_JUDGE_RETRY_BACKOFF_SEC": "0.01",
+        },
+    ):
+        evaluation = judge_result("query", "result")
+
+    assert evaluation["judge_error"] is True
+    assert "Rate limit" in evaluation["reason"]
+    assert mock_gen.generate_content.call_count == 2

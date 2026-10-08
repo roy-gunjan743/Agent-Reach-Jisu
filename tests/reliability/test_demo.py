@@ -8,7 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from agent_reach.reliability.demo import main, run_demo
+from agent_reach.reliability.backends import build_real_router
+from agent_reach.reliability.demo import main, preflight_check, run_demo
 from agent_reach.reliability.router import AdaptiveRouter
 
 
@@ -42,6 +43,17 @@ def test_demo_requires_api_key() -> None:
     output = buf.getvalue()
     assert exit_code == 1
     assert "GEMINI_API_KEY environment variable is missing" in output
+
+
+def test_demo_preflight_honours_dotenv(tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch) -> None:
+    """preflight_check() reads GEMINI_API_KEY from a local .env file."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    env_file = tmp_path / ".env"
+    env_file.write_text("GEMINI_API_KEY=test-key-from-dotenv\n", encoding="utf-8")
+
+    err = preflight_check()
+    assert err is None
 
 
 def test_demo_rejects_mock_flag() -> None:
@@ -160,3 +172,30 @@ def test_demo_fails_on_judge_error() -> None:
     output = buf.getvalue()
     assert exit_code == 1
     assert "Judge unavailable: rate limit" in output
+
+
+def test_max_chars_limits_normalized_length() -> None:
+    """Changing max_chars alters the normalized length passed to the judge."""
+    long_content = "Word " * 1000
+
+    def long_backend(q: str) -> str:
+        return long_content
+
+    judge_lengths: list[int] = []
+
+    def stub_judge(q: str, r: str) -> dict:
+        judge_lengths.append(len(r))
+        return {"decision": "accept", "score": 0.9}
+
+    router_small = build_real_router(judge=stub_judge, max_chars=100)
+    router_small.backends["direct-http-tron"] = long_backend
+    router_small.route("test query")
+
+    router_large = build_real_router(judge=stub_judge, max_chars=500)
+    router_large.backends["direct-http-tron"] = long_backend
+    router_large.route("test query")
+
+    assert len(judge_lengths) == 2
+    assert judge_lengths[0] <= 100
+    assert judge_lengths[1] <= 500
+    assert judge_lengths[0] < judge_lengths[1]

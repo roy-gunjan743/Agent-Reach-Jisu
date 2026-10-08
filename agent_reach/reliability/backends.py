@@ -56,6 +56,7 @@ def backend_b(query: str) -> str:
 
 def build_real_router(
     judge: Callable[[str, str], dict] | None = None,
+    max_chars: int = 4000,
 ) -> AdaptiveRouter:
     """Build a router with two real backends wired A-first, B-second.
 
@@ -65,10 +66,18 @@ def build_real_router(
         Optional judge callable ``(query, result) -> dict``.
         When *None* the router lazily imports ``judge_result`` from
         ``agent_reach.reliability.judge`` (i.e. the Gemma/Gemini judge).
+    max_chars:
+        Maximum characters for normalizer prior to judge evaluation.
     """
+    from agent_reach.reliability.normalizer import normalize
+
     # Dict insertion order controls deterministic A→B fallback priority.
     backends: dict[str, Callable[[str], str]] = {
         "direct-http-tron": backend_a,
         "jina-mcp-wiki": backend_b,
     }
-    return AdaptiveRouter(backends=backends, judge=judge)
+    return AdaptiveRouter(
+        backends=backends,
+        judge=judge,
+        normalizer=lambda text, q: normalize(text, query=q, max_chars=max_chars),
+    )

@@ -465,6 +465,63 @@ class TestFallbackOffline:
         stat.record_failure(0.2)
         assert abs(stat.quality_score - 0.55) < 1e-5
 
+    def test_gemma_label_printed_for_default_judge(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Default Gemma judge route prints 'Gemma 4 evaluation' with model name."""
+        from unittest.mock import patch
+
+        from agent_reach.reliability.judge import MODEL
+
+        def mock_gemma_judge(q: str, r: str) -> dict:
+            return _stub_judge_accept(q, r)
+
+        with patch(
+            "agent_reach.reliability.judge.judge_result", side_effect=mock_gemma_judge
+        ):
+            router = AdaptiveRouter(backends={"a": lambda q: "content"})
+            router.route(QUERY)
+
+        captured = capsys.readouterr().out
+        assert f"🧠 Gemma 4 evaluation ({MODEL}" in captured
+
+    def test_generic_judge_label_printed_for_stub_judge(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Injected stub judge route prints 'Judge evaluation' and not Gemma 4."""
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "content"},
+            judge=_stub_judge_accept,
+        )
+        router.route(QUERY)
+
+        captured = capsys.readouterr().out
+        assert "🧠 Judge evaluation (" in captured
+        assert "Gemma 4" not in captured
+
+    def test_partial_judge_outage_returns_best_rejected_result(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """When A is rejected and B hits judge_error, return best rejected result with partial_judge_outage=True."""
+
+        def error_judge(q: str, r: str) -> dict:
+            if "b_text" in r:
+                return {"judge_error": True, "reason": "rate limit"}
+            return _stub_judge_reject(q, r)
+
+        router = AdaptiveRouter(
+            backends={"a": lambda q: "a_text", "b": lambda q: "b_text"},
+            judge=error_judge,
+        )
+        result = router.route(QUERY)
+
+        assert result is not None
+        assert result.backend == "a"
+        assert result.partial_judge_outage is True
+
+        captured = capsys.readouterr().out
+        assert "judge unavailable for: b" in captured
+
 
 # =========================================================================
 # LIVE TESTS

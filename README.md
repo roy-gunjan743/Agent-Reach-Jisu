@@ -25,42 +25,12 @@
 
 ---
 
-## ❤️赞助商
-
-> [想出现在这里？](mailto:pnt01@foxmail.com)
-
-<details open>
-<summary>点击折叠</summary>
-
-<table>
-<tr>
-<td width="180" align="center"><a href="https://www.browseract.ai/Agent"><img src="docs/assets/sponsors/browseract.png" alt="BrowserAct" width="150"></a></td>
-<td><a href="https://www.browseract.ai/Agent">BrowserAct</a> 支持从 Amazon、LinkedIn、X、Google Maps 等复杂网站提取你需要的任意数据。你只需用自然语言描述抓取需求，Agent 就会基于真实浏览器自动探索并测试页面流程，生成可靠、可复用的数据采集 Bot，并返回结构化结果。无需手动构建爬虫，无需编写代码。BrowserAct 内置隐身浏览、验证码处理和高质量住宅代理，帮助你更稳定地完成复杂网页数据采集。新用户注册即送 1000 积分，<a href="https://www.browseract.ai/Agent">立即免费试用</a>。</td>
-</tr>
-<tr>
-<td width="180" align="center"><a href="https://www.tencentcloud.com/act/pro/intl-openclaw?referral_code=G76Y819A&amp;lang=zh&amp;pg="><img src="docs/assets/sponsors/tencent-cloud.svg" alt="腾讯云 OpenClaw" width="150"></a></td>
-<td>在腾讯云 Lighthouse 秒级部署 OpenClaw 全能助手，可通过对话丝滑接入 Agent Reach，给你的 OpenClaw 一键装上互联网能力。</td>
-</tr>
-<tr>
-<td width="180" align="center"><a href="https://www.coreclaw.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=Reach&amp;utm_term=Reach&amp;utm_id=Reach"><img src="docs/assets/sponsors/coreclaw.png" alt="CoreClaw" width="150"></a></td>
-<td><a href="https://www.coreclaw.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=Reach&amp;utm_term=Reach&amp;utm_id=Reach">CoreClaw</a> | 网页抓取平台与现成数据采集工具，CoreClaw 提供 100+ 现成数据采集工具，支持 Amazon、TikTok、Google Maps、Instagram、Facebook、YouTube 等平台，无需代码，支持 JSON/CSV 导出，仅对成功结果计费。<a href="https://www.coreclaw.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=Reach&amp;utm_term=Reach&amp;utm_id=Reach">免费$3测试！</a></td>
-</tr>
-<tr>
-<td width="180" align="center"><a href="https://www.ucloud.cn/site/active/astraflow?ytag=geo_waituo_Agent"><img src="docs/assets/sponsors/astraflow.png" alt="星图 AstraFlow" width="150"></a></td>
-<td><a href="https://www.ucloud.cn/site/active/astraflow?ytag=geo_waituo_Agent">优刻得星图astraflow大模型</a>，支持200+模型一键调用：内置 Kimi K3、DeepSeek V4/V3、Qwen 3、GLM5.2、happyhorse等全球领先开源大模型，无需自训，开箱即用</td>
-</tr>
-</table>
-
-</details>
-
----
-
 ## Adaptive Semantic Router (Hackathon: Open-Source AI + Build with Gemma)
 
 We extended Agent Reach with a Gemma-powered semantic routing layer that evaluates whether a backend's real result actually answered the user's question and automatically falls back to another backend when it didn't.
 
 ### Problem
-Backend HTTP reachability does not guarantee answer quality. A web reader may successfully return a 200 OK response with 100,000 characters of clean text, but if the content is about the wrong topic (e.g., a 1982 sci-fi movie instead of an AI protocol), traditional status-code checks treat it as a success.
+Backend HTTP reachability does not guarantee answer quality. A web reader may successfully return a 200 OK response with raw content (e.g. 100,000 raw characters reduced by normalizer to a bounded excerpt), but if the content is about the wrong topic (e.g., a 1982 sci-fi movie instead of an AI protocol), traditional status-code checks treat it as a success.
 
 ### Solution
 The Adaptive Semantic Router uses Gemma as a real-time semantic judge. After content normalization, Gemma evaluates the text along four quality dimensions (relevance, freshness, completeness, confidence) and returns a structured decision (`accept` or `reject`). If rejected, the router automatically triggers fallback to the next candidate backend.
@@ -102,6 +72,8 @@ Gemma acts as the semantic judge. Its evaluation directly determines whether the
    - `AGENT_REACH_JUDGE_MODEL`: model override (default: `gemma-4-26b-a4b-it`)
    - `AGENT_REACH_GEMINI_API_URL`: endpoint override
    - `AGENT_REACH_JUDGE_MAX_CHARS`: maximum characters sent to judge (default: `12000`)
+   - `AGENT_REACH_JUDGE_TIMEOUT_MS`: request timeout in milliseconds (default: `30000`)
+   - `AGENT_REACH_JUDGE_RETRIES`: retry count on API error/timeout (default: `1`)
 
 3. **Run the Live Demo**:
    ```bash
@@ -122,7 +94,7 @@ Gemma acts as the semantic judge. Its evaluation directly determines whether the
 - **Model Identified**: `gemma-4-26b-a4b-it` (Gemma 4 via Gemini API)
 - **AI Role**: Semantic quality judge driving multi-backend fallback
 - **Reproduction**: Run `python -m agent_reach.reliability.demo` with `GEMINI_API_KEY` set.
-- **Licence & Terms**: See the official Gemma terms at [Google Gemma Terms](https://ai.google.dev/gemma/terms).
+- **Licence & Terms**: Gemma model usage is subject to the [Gemma Terms of Use](https://ai.google.dev/gemma/terms); Gemini API usage is governed by the [Gemini API Terms of Service](https://ai.google.dev/terms).
 
 ### Honest Limitations
 - **Backend scope**: Currently wired with two real backends for demonstration (`direct-http-tron` and `jina-mcp-wiki`); Backend A is deliberately pinned to a wrong-topic article to demonstrate semantic fallback.
@@ -132,6 +104,34 @@ Gemma acts as the semantic judge. Its evaluation directly determines whether the
 - **Persistence**: Per-backend statistics are in-memory only and reset when process terminates.
 
 ---
+
+## ❤️赞助商
+
+> [想出现在这里？](mailto:pnt01@foxmail.com)
+
+<details open>
+<summary>点击折叠</summary>
+
+<table>
+<tr>
+<td width="180" align="center"><a href="https://www.browseract.ai/Agent"><img src="docs/assets/sponsors/browseract.png" alt="BrowserAct" width="150"></a></td>
+<td><a href="https://www.browseract.ai/Agent">BrowserAct</a> 支持从 Amazon、LinkedIn、X、Google Maps 等复杂网站提取你需要的任意数据。你只需用自然语言描述抓取需求，Agent 就会基于真实浏览器自动探索并测试页面流程，生成可靠、可复用的数据采集 Bot，并返回结构化结果。无需手动构建爬虫，无需编写代码。BrowserAct 内置隐身浏览、验证码处理和高质量住宅代理，帮助你更稳定地完成复杂网页数据采集。新用户注册即送 1000 积分，<a href="https://www.browseract.ai/Agent">立即免费试用</a>。</td>
+</tr>
+<tr>
+<td width="180" align="center"><a href="https://www.tencentcloud.com/act/pro/intl-openclaw?referral_code=G76Y819A&amp;lang=zh&amp;pg="><img src="docs/assets/sponsors/tencent-cloud.svg" alt="腾讯云 OpenClaw" width="150"></a></td>
+<td>在腾讯云 Lighthouse 秒级部署 OpenClaw 全能助手，可通过对话丝滑接入 Agent Reach，给你的 OpenClaw 一键装上互联网能力。</td>
+</tr>
+<tr>
+<td width="180" align="center"><a href="https://www.coreclaw.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=Reach&amp;utm_term=Reach&amp;utm_id=Reach"><img src="docs/assets/sponsors/coreclaw.png" alt="CoreClaw" width="150"></a></td>
+<td><a href="https://www.coreclaw.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=Reach&amp;utm_term=Reach&amp;utm_id=Reach">CoreClaw</a> | 网页抓取平台与现成数据采集工具，CoreClaw 提供 100+ 现成数据采集工具，支持 Amazon、TikTok、Google Maps、Instagram、Facebook、YouTube 等平台，无需代码，支持 JSON/CSV 导出，仅对成功结果计费。<a href="https://www.coreclaw.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=Reach&amp;utm_term=Reach&amp;utm_id=Reach">免费$3测试！</a></td>
+</tr>
+<tr>
+<td width="180" align="center"><a href="https://www.ucloud.cn/site/active/astraflow?ytag=geo_waituo_Agent"><img src="docs/assets/sponsors/astraflow.png" alt="星图 AstraFlow" width="150"></a></td>
+<td><a href="https://www.ucloud.cn/site/active/astraflow?ytag=geo_waituo_Agent">优刻得星图astraflow大模型</a>，支持200+模型一键调用：内置 Kimi K3、DeepSeek V4/V3、Qwen 3、GLM5.2、happyhorse等全球领先开源大模型，无需自训，开箱即用</td>
+</tr>
+</table>
+
+</details>
 
 ---
 
@@ -194,7 +194,7 @@ AI Agent 已经能帮你写代码、改文档、管项目——但你让它去�
 | 📺 **B站** | 搜索 + 视频详情（bili-cli，无需登录） | 字幕（OpenCLI） | 告诉 Agent「帮我配 B站」 |
 | 📖 **Reddit** | —（没有零配置路径：匿名接口已被封） | 搜索 + 读帖子和评论 | 桌面装 OpenCLI 用浏览器登录态；或 rdt-cli + Cookie |
 | 📘 **Facebook** | — | 搜索、主页、Feed、群组列表 | 桌面装 OpenCLI（复用 Chrome 登录态） |
-| 📷 **Instagram** | — | 用户搜索、Profile、用户最近帖子、Explore | 桌面装 OpenCLI（复用 Chrome 登录态） |
+| 📷 **Instagram** | — | 搜索、Profile、用户最近帖子、Explore | 桌面装 OpenCLI（复用 Chrome 登录态） |
 | 📕 **小红书** | — | 搜索、阅读、评论 | OpenCLI 只用用户已有 Chrome 会话；MCP/存量工具用 Cookie-Editor |
 | 💼 **LinkedIn** | Jina Reader 读公开页面 | Profile 详情、公司页面、职位搜索 | 告诉 Agent「帮我配 LinkedIn」 |
 | 🎯 **Boss直聘** | CDP 链路体检 | 搜索岗位 + JD 全文（专用真 Chrome） | 告诉 Agent「帮我配 Boss直聘」；Agent 打开专用 Chrome，你手动登录 |
@@ -259,144 +259,44 @@ AI Agent 已经能帮你写代码、改文档、管项目——但你让它去�
 
 ---
 
-## 装好就能用
+## 设计理念与演进
 
-不需要任何配置，告诉 Agent 就行：
+<details>
+<summary>详细架构与选型逻辑（点击展开）</summary>
 
-- "帮我看看这个链接" → `curl https://r.jina.ai/URL` 读任意网页
-- "这个 GitHub 仓库是做什么的" → `gh repo view owner/repo`
-- "这个 YouTube 视频讲了什么" → `yt-dlp` 提取字幕
-- "B站搜一下 AI 教程" → `bili search`（无需登录）
-- "全网搜一下 LLM 框架对比" → Exa 语义搜索
-- "订阅这个 RSS" → `feedparser` 解析
+### 平台不是越多越好，而是变了有人修
 
-**不需要记命令。** Agent 读了 SKILL.md 之后自己知道该调什么。需要登录的平台（小红书、Twitter、Reddit、Facebook、Instagram），告诉 Agent「帮我配 XXX」即可解锁。
+很多工具号称「支持 100 个平台」，你装上一试，一半是坏的。因为每个平台的网页结构、反爬策略、API 规则都在不断变化。
 
----
+Agent Reach 的核心逻辑是**集中精力维护最核心的 10+ 平台**，确保每一个都稳定可用：
 
-## 设计理念
+- 每一个平台都有**自动化体检脚本**，每天检测可用性
+- 每一个平台都有**备用链路**，一条路不通自动换下一条
+- 社区共同维护，发现失效第一时间更新
 
-**Agent Reach 是一个能力层（capability layer），不是又一个工具。**
+### 接入方式的四个梯队
 
-它比任何具体实现高一层——负责**选型、安装、体检、路由**，不负责底层读取本身。读取由 Agent 直接调用上游工具完成，没有包装层。
-
-你给一个新 Agent 装环境的时候，总要花时间去找工具、装依赖、调配置——Twitter 用什么读？Reddit 怎么登录？小红书的 CLI 停更了换什么？每次都要重新踩一遍。Agent Reach 做的事情很简单：**当下最稳的接入方式，我们替你选好、装好、体检好。接入方式会换代（2026 年 3 月一批单平台 CLI 集体停更，我们换了路由），你不用操心。**
-
-### 🔌 每个平台 = 首选 + 备选的有序后端列表
-
-换接入方式 = 调整列表顺序，不是重写代码。`agent-reach doctor` 会告诉你每个平台**当前在用哪个后端**。
+我们把所有平台的接入方式分为四个梯队，优先用最轻量的，最后才用最重量的：
 
 ```
-channels/
-├── web.py          → Jina Reader
-├── twitter.py      → twitter-cli ▸ OpenCLI ▸ bird
-├── youtube.py      → yt-dlp
-├── github.py       → gh CLI
-├── bilibili.py     → bili-cli ▸ OpenCLI ▸ 搜索 API（yt-dlp 已被 B站风控封死，退役）
-├── reddit.py       → OpenCLI ▸ rdt-cli（无零配置路径，必须登录态）
-├── facebook.py     → OpenCLI（桌面浏览器登录态）
-├── instagram.py    → OpenCLI（桌面浏览器登录态）
-├── xiaohongshu.py  → OpenCLI ▸ xiaohongshu-mcp ▸ xhs-cli
-├── linkedin.py     → mcp-server-linkedin ▸ Jina Reader
-├── rss.py          → feedparser
-├── exa_search.py   → Exa via mcporter
-└── __init__.py     → 渠道注册（doctor 检测用）
+梯队 1：免 Key API / RSS / 字幕
+        └─ 速度最快，完全免费，零配置
+
+梯队 2：桌面工具接入（OpenCLI / mcporter）
+        └─ 复用用户已登录的浏览器 Cookie，免去繁琐配置
+
+梯队 3：免费 API（Jina / Exa / Tavily）
+        └─ 需要申请免费 Key，提供高质量结构化数据
+
+梯队 4：CDP 真浏览器（无头 / 显式 Chrome）
+        └─ 处理强风控页面，终极保底方案
 ```
 
-每个渠道文件按序**真实探测**各候选后端（不只是看命令存不存在），第一个完整可用的当选；坏掉的会给出修复处方。实际的读取和搜索由 Agent 直接调用上游工具完成。
+Agent Reach 会自动选择当前可用的最高梯队，你不需要关心底层用的是什么方式。
 
-### 当前选型
-
-| 场景 | 首选 | 备选 | 为什么这么选 |
-|------|------|------|-----------|
-| 读网页 | [Jina Reader](https://github.com/jina-ai/reader) | — | 免费，不需要 API Key |
-| 读推特 | [twitter-cli](https://github.com/public-clis/twitter-cli) | [OpenCLI](https://github.com/jackwener/opencli) | 实测搜索稳定；OpenCLI 走浏览器登录态兜底 |
-| Reddit | [OpenCLI](https://github.com/jackwener/opencli)（桌面） | [rdt-cli](https://github.com/public-clis/rdt-cli) | 匿名接口已被封、官方 API 审批制——只剩登录态路线 |
-| Facebook | [OpenCLI](https://github.com/jackwener/opencli)（桌面） | — | Graph API/Groups API 权限收紧；浏览器登录态是当前最实用路径 |
-| Instagram | [OpenCLI](https://github.com/jackwener/opencli)（桌面） | 官方 Graph API（Business/Creator + 审批） | instaloader 类路径不稳定；OpenCLI 复用真实浏览器会话 |
-| YouTube 字幕 + 搜索 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | — | 154K Star，YouTube 仍是最佳（注意：不再用于 B站） |
-| B站 | [bili-cli](https://github.com/public-clis/bilibili-cli) | OpenCLI ▸ 搜索 API | yt-dlp 被 B站风控 412 封死（2026-06 实测），bili-cli 无登录可搜可读 |
-| 搜全网 | [Exa](https://exa.ai) via [mcporter](https://github.com/nicobailon/mcporter) | — | AI 语义搜索，MCP 接入免 Key |
-| GitHub | [gh CLI](https://cli.github.com) | — | 官方工具，认证后完整 API 能力 |
-| 读 RSS | [feedparser](https://github.com/kurtmckee/feedparser) | — | Python 生态标准选择 |
-| 小红书 | [OpenCLI](https://github.com/jackwener/opencli)（桌面） | [xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp)（服务器）▸ xhs-cli | OpenCLI 只用用户已有会话；其余后端用 Cookie-Editor 手工导出 |
-| LinkedIn | [mcp-server-linkedin](https://github.com/stickerdaniel/linkedin-mcp-server) | Jina Reader | MCP 服务，浏览器自动化 |
-
-> 📌 这些都是「当前选型」，基于真机实测定期复核。某条路失效了我们换下一条——`agent-reach doctor` 永远告诉你现在走的是哪条。
+</details>
 
 ---
-
-## 安全性
-
-Agent Reach 在设计上重视安全：
-
-| 措施 | 说明 |
-|------|------|
-| 🔒 **凭据本地存储** | Cookie、Token 只存在你本机 `~/.agent-reach/config.yaml`，文件权限 600（仅所有者可读写），不上传不外传 |
-| 🛡️ **默认安全** | `agent-reach install` 默认不修改系统；只有显式 `--system` 才安装外部工具和写入配置 |
-| 👀 **完全开源** | 代码透明，随时可审查。所有依赖工具也是开源项目 |
-| 🔍 **Dry Run** | `agent-reach install --dry-run` 预览所有操作，不做任何改动 |
-| 🧩 **可插拔架构** | 不信任某个组件？换掉对应的 channel 文件即可，不影响其他 |
-
-### 🍪 Cookie 安全建议
-
-> ⚠️ **封号风险提醒：** 使用 Cookie 登录的平台（Twitter、小红书等），通过脚本/API 调用**存在被平台检测并封号的风险**。请务必使用**专用小号**，不要用你的主账号。
-
-需要 Cookie 或登录态的平台（Twitter、小红书、Reddit、Facebook、Instagram 等）建议使用**专用小号**，不要用主账号。原因有二：
-1. **封号风险** — 平台可能检测到非正常浏览器的 API 调用行为，导致账号被限制或封禁
-2. **安全风险** — Cookie 等同于完整登录权限，用小号可以在凭据泄露时限制影响范围
-
-### 📦 安装方式
-
-| 方式 | 命令 | 适合场景 |
-|------|------|---------|
-| 默认安全检查 | `agent-reach install --env=auto` | 所有环境；只读检查并列出缺失项 |
-| 显式安装系统依赖 | `agent-reach install --env=auto --system` | 你明确允许修改当前机器时 |
-| 兼容安全参数 | `agent-reach install --env=auto --safe` | 与默认行为相同 |
-| 仅预览 | `agent-reach install --env=auto --dry-run` | 先看看会做什么 |
-
-### 🗑️ 卸载
-
-```bash
-agent-reach uninstall
-```
-
-会清除：`~/.agent-reach/`（含所有 token/cookie）、各 Agent 的 skill 文件、mcporter 中的 MCP 配置。
-
-```bash
-# 只预览，不实际删除
-agent-reach uninstall --dry-run
-
-# 只删 skill 文件，保留 token 配置（重装时用）
-agent-reach uninstall --keep-config
-```
-
-卸载 Python 包本身：`pip uninstall agent-reach`
-
----
-
-## ⭐ 为什么值得 Star
-
-这个项目我自己每天在用，所以我会一直维护它。
-
-- 有新需求或者大家提了想要的渠道，我会陆续加上
-- 每个渠道我会尽量保证**能用、好用、免费**
-- 平台改了反爬或者 API 变了，我会想办法解决
-
-为 Web 4.0 基建贡献一份自己的力量。
-
-Star 一下，下次需要的时候能找到。⭐
-
----
-
-## 致谢
-
-[OpenCLI](https://github.com/jackwener/opencli) · [twitter-cli](https://github.com/public-clis/twitter-cli) · [rdt-cli](https://github.com/public-clis/rdt-cli) · [xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp) · [xhs-cli](https://github.com/jackwener/xiaohongshu-cli) · [bili-cli](https://github.com/public-clis/bilibili-cli) · [yt-dlp](https://github.com/yt-dlp/yt-dlp) · [Jina Reader](https://github.com/jina-ai/reader) · [Exa](https://exa.ai) · [mcporter](https://github.com/nicobailon/mcporter) · [feedparser](https://github.com/kurtmckee/feedparser) · [mcp-server-linkedin](https://github.com/stickerdaniel/linkedin-mcp-server)
-
-## 联系
-
-- 📧 **Email:** pnt01@foxmail.com
-- 🐦 **Twitter/X:** [@Neo_Reidlab](https://x.com/Neo_Reidlab)
 
 ## 业务合作 / Agent 落地
 
@@ -431,3 +331,13 @@ Builder 也欢迎备注：`Builder + 你在做什么`
 ## Star History
 
 <a href="https://www.star-history.com/?type=date&repos=Panniantong%2FAgent-Reach"><picture><source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Panniantong/Agent-Reach&type=date&theme=dark&legend=top-left&sealed_token=K3_u-LJQTVURYu-38Tqa_VWJOSqMf_HbAw-QKSdGwEq6seqznugdIpXdSeztEdOutT40IBXwVxTmg8wS_OSygb5UWf1x8e-Fai6aygrjq6QH8vU09EcqQCN7atp-76HmxX-j9fnZ9NiSrLDNzK98TnXBFJ_Wb_y80I0nWr3O8DdGnLXFhAJgoNK3Jz8D" /><source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Panniantong/Agent-Reach&type=date&legend=top-left&sealed_token=P2746KOq7grpS8Q-nrqEzci1-Z0-dOw-M3KEqju-l3TyF24NMyRDR7TnxdReJWlXyomoT4mjjqC28-2-c2G6CnzmS1hgYdEDiGPmLkmEqKP5tgjORXshdrUFxoSxTqmIKEMFFmGZUX1v3ec-q_XMyftTVWzluiQH7CvKoZ1uDKU3PJN05mO22u7qlLeG" /><img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Panniantong/Agent-Reach&type=date&legend=top-left&sealed_token=P2746KOq7grpS8Q-nrqEzci1-Z0-dOw-M3KEqju-l3TyF24NMyRDR7TnxdReJWlXyomoT4mjjqC28-2-c2G6CnzmS1hgYdEDiGPmLkmEqKP5tgjORXshdrUFxoSxTqmIKEMFFmGZUX1v3ec-q_XMyftTVWzluiQH7CvKoZ1uDKU3PJN05mO22u7qlLeG" /></picture></a>
+
+---
+
+## Hackathon Submission Details
+
+- **Project Name**: Agent-Reach-Jisu
+- **Team Name**: [FILL_TEAM_NAME]
+- **Team Members**: [FILL_TEAM_MEMBERS]
+- **Tracks Entered**: Open-Source AI + Build with Gemma
+- **Demo Command**: `python -m agent_reach.reliability.demo`
